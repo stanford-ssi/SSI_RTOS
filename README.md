@@ -61,7 +61,7 @@ void Task2::activity() {
 }
 ```
 ## MsgBuffers and StrBuffers
-MsgBuffers are a queue used to send information between tasks. A task can send an object to the buffer, while another task can wait to receive an object from that buffer. The receive call can be either blocking or non-blocking. Multiple tasks are allowed to send data to the message buffer, but only one task is allowed to receive from the message buffer. 
+MsgBuffers are a queue used to send information between tasks. A task can send an object to the buffer, while another task can wait to receive an object from that buffer. The receive call can be either blocking or non-blocking -- in blocking mode, our RTOS scheduler will sleep the waiting thread and pre-empt back to it only when there is data ready to be popped from the buffer. Multiple tasks are allowed to send data to the message buffer, but only one task is allowed to receive from the message buffer. 
 Task 1: 
 ```C
 msgbuf.send(object, xGetTaskID());
@@ -75,12 +75,15 @@ msgbuf.receive(curobj, xGetTaskID(), blocking=true);
 StrBuffers are similar to MsgBuffers, except a task can send or receive a variable number of bytes from the queue. The StrBuffer is also specifically designed with storing lines of characters in mind. It is used by the LoggerTask in SpaceSalmon. 
 
 ## Event Bit Notifications and Delays
+We also support event bit notifications and delays on such notifications. Each task has an 8-bit event field that it can either update or wait on. A task can update the notification bits for a specific task by calling "void set_notify_array(uint32_t taskid, uint8_t uxBitsToWaitFor)". A task can then wait for a set number of bits by calling "xEventGroupWaitBits(...)". xEventGroupWaitBits can wait indefinitely for the bits to be set or for a set amount of time: if xEventGroupWaitBits resumes the task function due to the correct event bits being set, then it will return 1. Event bit notifications are especially useful within the RadioTask. 
 
 ## Critical Sections
+A user can specify a critical section of a task with begin_critical()/end_critical() if that section of the task must not be disrupted. If an interrupt happens to occur during a critical section, our RTOS scheduler will ensure that it will continue running the critical section code after the interrupt. 
 
 ## Interrupt Requests
+To return from an interrupt to regularly-scheduled RTOS tasks, call yieldFromISR() at the end of the ISR handler function. This will take care of resuming the proper RTOS task, and not interrupting a critical section. 
 
 # Context Switching on the M4-Cortex
-Context switching on the M4 cortex
+Context switching on the M4 cortex differs from the 1176 in a few ways. The ARM Cortex was designed with RTOS specifically in mind 
 
 # Tests
