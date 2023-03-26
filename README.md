@@ -75,7 +75,32 @@ msgbuf.receive(curobj, xGetTaskID(), blocking=true);
 StrBuffers are similar to MsgBuffers, except a task can send or receive a variable number of bytes from the queue. The StrBuffer is also specifically designed with storing lines of characters in mind. It is used by the LoggerTask in SpaceSalmon. 
 
 ## Event Bit Notifications and Delays
-We also support event bit notifications and delays on such notifications. Each task has an 8-bit event field that it can either update or wait on. A task can update the notification bits for a specific task by calling "void set_notify_array(uint32_t taskid, uint8_t uxBitsToWaitFor)". A task can then wait for a set number of bits by calling "xEventGroupWaitBits(...)". xEventGroupWaitBits can wait indefinitely for the bits to be set or for a set amount of time: if xEventGroupWaitBits resumes the task function due to the correct event bits being set, then it will return 1. Event bit notifications are especially useful within the RadioTask. 
+We also support event bit notifications and delays on such notifications. Each task has an 8-bit event field that it can either update or wait on. A task can update the notification bits for a specific task by calling "void set_notify_array(uint32_t taskid, uint8_t uxBitsToWaitFor)". A task can then wait for a set number of bits by calling "xEventGroupWaitBits(...)". xEventGroupWaitBits can wait indefinitely for the bits to be set or for a set amount of time: if xEventGroupWaitBits resumes the task function due to the correct event bits being set, then it will return 1. Event bit notifications are especially useful within the RadioTask:
+
+```C
+radioISR(void) {
+    ...
+    // notify the first event bit of the radio task
+    set_notify_arr(currentRadioID, 0b01);
+    ...
+}
+
+bool RadioTask::sendPacket(packet_t &packet, uint32_t taskid) {
+    ...
+    // after adding packet to buffer, notify the second bit of the radio task
+    set_notify_arr(currentRadioID, 0b10);
+}
+
+void RadioTask::activity() {
+    while (true) {
+        ...
+        // before moving on, wait indefinitely for the first two event bits to be set
+        xEventGroupWaitBits(xGetTaskId(), 0b11, true, -1, true);
+        ...
+    }
+}
+```
+
 
 ## Critical Sections
 A user can specify a critical section of a task with begin_critical()/end_critical() if that section of the task must not be disrupted. If an interrupt happens to occur during a critical section, our RTOS scheduler will ensure that it will continue running the critical section code after the interrupt. 
@@ -84,6 +109,4 @@ A user can specify a critical section of a task with begin_critical()/end_critic
 To return from an interrupt to regularly-scheduled RTOS tasks, call yieldFromISR() at the end of the ISR handler function. This will take care of resuming the proper RTOS task, and not interrupting a critical section. 
 
 # Context Switching on the M4-Cortex
-Context switching on the M4 cortex differs from the 1176 in a few ways. The ARM Cortex was designed with RTOS specifically in mind 
-
-# Tests
+Context switching with the M4 cortex differs from the ARM 1176 in a few ways. Unlike 1176, the only banked register on the Cortex is the SP register. The M4 cortex documentation states that the hardware automatically saved the caller-saved registers during an interrupt or any function call, meaning the only banked register we need is the SP register. This allows us to run code in one of two modes: MSP (main stack pointer) or PSP (process stack pointer) mode. Interrupt handling, default initial setting, etc is all in MSP mode, and so it is our RTOS's responsiblity to ensure proper switching back to PSP mode when pre-empting between tasks. 
