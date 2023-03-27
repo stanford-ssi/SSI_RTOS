@@ -115,5 +115,10 @@ When running in non-SHITL mode, we test that the sensor polling indeed happens e
 
 Additionally, we run Some Hardware In The Loop (SHITL) testing where sensor data is queued from a text file collected during a prior rocket launch, as opposed to polling live sensor data from the board. We can then compare the results of filtered altitude and velocity with FreeRTOS vs our RTOS and see that they are virtually identical below:
 <p align="center">
-  <img src="images/shitl.png" width="450" />
+  <img src="images/shitl.png" width="550" />
+</p>
+
+And as observed from the radio packets that the ground station received:
+<p align="center">
+  <img src="images/shitlground.png" width="550" />
 </p>
