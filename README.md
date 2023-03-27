@@ -101,7 +101,6 @@ void RadioTask::activity() {
 }
 ```
 
-
 ## Critical Sections
 A user can specify a critical section of a task with begin_critical()/end_critical() if that section of the task must not be disrupted. If an interrupt happens to occur during a critical section, our RTOS scheduler will ensure that it will continue running the critical section code after the interrupt. 
 
@@ -109,4 +108,12 @@ A user can specify a critical section of a task with begin_critical()/end_critic
 To return from an interrupt to regularly-scheduled RTOS tasks, call yieldFromISR() at the end of the ISR handler function. This will take care of resuming the proper RTOS task, and not interrupting a critical section. 
 
 # Context Switching on the M4-Cortex
-Context switching with the M4 cortex differs from the ARM 1176 in a few ways. Unlike 1176, the only banked register on the Cortex is the SP register. The M4 cortex documentation states that the hardware automatically saved the caller-saved registers during an interrupt or any function call, meaning the only banked register we need is the SP register. This allows us to run code in one of two modes: MSP (main stack pointer) or PSP (process stack pointer) mode. Interrupt handling, default initial setting, etc is all in MSP mode, and so it is our RTOS's responsiblity to ensure proper switching back to PSP mode when pre-empting between tasks. 
+Context switching with the M4 cortex differs from the ARM 1176 in a few ways. Unlike 1176, the only banked register on the Cortex is the SP register. The M4 cortex documentation states that the hardware automatically saved the caller-saved registers during an interrupt or any function call, meaning the only banked register we need is the SP register. This allows us to run code in one of two modes: MSP (main stack pointer) or PSP (process stack pointer) mode. Interrupt handling, default initial setting, etc is all in MSP mode, and so it is our RTOS's responsiblity to ensure proper switching back to PSP mode when pre-empting between tasks. During context switching, it is also the RTOS responsiblity to switch back to floating point unit (FPU) mode as well, if the task was running in FPU mode before pre-emption. 
+
+# Testing
+When running in non-SHITL mode, we test that the sensor polling indeed happens every 10 ms. Leaving the flight computer on for 10 min, we log all the queued sensor data to the SD card, and then run a script through the text file ensuring that every single sensor log is exactly 10 ticks apart, no exceptions.
+
+Additionally, we run Some Hardware In The Loop (SHITL) testing where sensor data is queued from a text file collected during a prior rocket launch, as opposed to polling live sensor data from the board. We can then compare the results of filtered altitude and velocity with FreeRTOS vs our RTOS and see that they are virtually identical below:
+<p align="center">
+  <img src="images/shitl.png" width="450" />
+</p>
