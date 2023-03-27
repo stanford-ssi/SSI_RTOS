@@ -1,0 +1,6 @@
+{
+    "name": "Tone",
+    "build":{
+        "libArchive": false
+    }
+}

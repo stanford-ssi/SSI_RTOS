@@ -1,0 +1,27 @@
+#pragma once
+#include "../Pyro.h"
+#include "stdint.h"
+#include "ssi_adc.h"
+
+class PyroFets : public Pyro {
+
+    public:
+        PyroFets(uint8_t fire1, uint8_t sense1, uint8_t fire2, uint8_t sense2, ADC &adc);
+        
+        void init();
+        void arm();
+        void disarm();
+        bool fire(PyroChannel channel);
+        
+        bool getStatus(PyroChannel channel, uint32_t taskid);
+
+    private:
+        //armed
+        bool armed;
+        //pins
+        uint8_t fire1_pin;
+        uint8_t sense1_pin;
+        uint8_t fire2_pin;
+        uint8_t sense2_pin;
+        ADC &adc;
+};

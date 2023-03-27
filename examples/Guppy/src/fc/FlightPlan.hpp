@@ -1,0 +1,80 @@
+#pragma once
+#include "periph/Pyro.h"
+#include "FreeRTOS.h"
+
+class FlightPlan;
+
+typedef enum {
+    Waiting,    //On pad wating for Launch
+    Flight,     //Flying with Positive Velocity
+    Falling,    //Falling with Negative Velocity
+    Landed      //Landed
+} FlightState;
+
+typedef enum {
+    VelNone,
+    VelLess, //NEGATIVE VELOCITY is DOWN!
+    VelMore  //POSITIVE VELOCITY is UP!
+} VelocityCondition;
+
+typedef enum {
+    AltNone,
+    AltLess,
+    AltMore
+} AltCondition;
+
+typedef enum {
+    BlowSquib
+} EventAction;
+
+typedef Pyro::PyroChannel SquibChannel;
+
+typedef struct {
+    FlightState state;
+    VelocityCondition velCond;
+    float velocity; //meters/sec
+    AltCondition altCond;
+    float altitude; //meters AGL
+    EventAction action;
+    SquibChannel squib;
+    uint32_t time; //minimum time to fire for
+} FlightEvent;
+
+static const FlightEvent eventList[] = {{Falling,   VelLess,    0.0,      AltNone,    0.0,      BlowSquib,  Pyro::PyroChannel::SquibA,  500    },  //Apogee Event, at velocity 0-crossing
+                                        {Falling,   VelLess,    0.0,      AltNone,    0.0,      BlowSquib,  Pyro::PyroChannel::SquibB,  500    },  //Apogee Event, at velocity 0-crossing
+                                        {Falling,   VelLess,  -55.0,      AltLess,    1000.0,   BlowSquib,  Pyro::PyroChannel::SquibC,  500    },  //If drouge does not deploy and we fall too fast, prevent lawn dart at all costs
+                                        {Falling,   VelNone,    0.0,      AltLess,    304.0,    BlowSquib,  Pyro::PyroChannel::SquibC,  500    },  //Norminal Main deploy at 1000ft
+                                        {Falling,   VelLess,  -55.0,      AltLess,    1000.0,   BlowSquib,  Pyro::PyroChannel::SquibD,  500    },  //If drouge does not deploy and we fall too fast, prevent lawn dart at all costs
+                                        {Falling,   VelNone,    0.0,      AltLess,    304.0,    BlowSquib,  Pyro::PyroChannel::SquibD,  500    }}; //Norminal Main deploy at 1000ft
+
+#include "AltFilter.hpp"
+#include "stdint.h"
+#include "Poster.hpp"
+
+class FlightPlan{
+    public:
+        FlightPlan();
+        void update(AltFilter& filter, uint32_t taskid);
+        void dumpConfig(uint32_t taskid);
+        void logState(uint32_t taskid);
+        Poster<FlightState> p_state;
+        Poster<bool> pyroA_fired = Poster<bool>();
+        Poster<bool> pyroB_fired = Poster<bool>();
+        Poster<bool> pyroC_fired = Poster<bool>();
+        Poster<bool> pyroD_fired = Poster<bool>();
+
+    private:
+        float pad_alts[2] = {0.0, 0.0}; //a buffer of past altitudes, the 0th of which will be the pad altitude
+        uint32_t pad_alt_counter = 0;
+        uint32_t print_timer = 0;
+        uint32_t state_timer = 0;
+        FlightState state;
+        bool squibAFired;
+        bool squibBFired;
+        bool squibCFired;
+        bool squibDFired;
+        bool event_done[(sizeof(eventList)/sizeof(FlightEvent))] = {false,false,false,false,false,false};
+        uint32_t event_timer = 0;
+
+};
+
