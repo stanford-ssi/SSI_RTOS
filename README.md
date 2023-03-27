@@ -4,7 +4,7 @@ _Rehaan Ahmad, Alex Paek, Raj Palleti_
 We provide our own implementation of RTOS that the SpaceSalmon codebase can be built upon instead of FreeRTOS. Like FreeRTOS, task pre-emption is governed by user defined delays, mutexes, event bits, blocking message buffer receives, and more. 
 
 # SSI RTOS Features
-Below are a list of features SSI RTOS supports that are needed to support the SSI SpaceSalmon codebase
+Below are a list of features SSI RTOS supports that are needed to support the SSI SpaceSalmon codebase. To see an example of how our RTOS library is being used in the flight computer codebase, look under the examples folder. 
 ## Priority delay
 To delay a task for a specified number of milliseconds from a specified point, run:
 ```C
