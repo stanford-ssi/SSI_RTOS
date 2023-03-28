@@ -1,5 +1,5 @@
 {
-    "name": "FreeRTOS-wrappers",
+    "name": "SSI_RTOS",
     "build":{
         "flags":
         [
