@@ -38,7 +38,7 @@ volatile uint32_t interruptTime = UINT32_MAX;
 volatile uint8_t incritical = 0;
 static uint32_t init_task_stack[1024];
 volatile uint32_t didinit = 0;
-
+volatile uint8_t numcrit = 0;
 static void task0_handler(void* bullshit);
 
 static void task_finished(void)
@@ -214,9 +214,15 @@ void yieldFromISR(){
 
 			next_task = &task_dir.tasks[task_dir.current_task];
 			next_task->status = ACTIVE;
+            numcrit = 0;
 			SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
 		}
 	} else {
+        numcrit++;
+        if (numcrit > 5) {
+            Serial.print("STUCK IN CRITICAL SECTION: ");
+            Serial.println(numcrit);
+        }
 		if (notify_scheduler == 1) {
 			notify_scheduler = 0;
 			uint32_t newtask = task_dir.current_task;
@@ -298,9 +304,16 @@ extern "C" {
 			task_dir.current_task = newtask;
 			next_task = &task_dir.tasks[task_dir.current_task];
 			next_task->status = ACTIVE;
+            numcrit = 0;
 			SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
 		}
-		}
+		} else {
+            numcrit++;
+            if (numcrit > 5) {
+                Serial.print("STUCK IN CRITICAL SECTION: ");
+                Serial.println(numcrit);
+            }
+        }
 
 		return 0;
 	}
