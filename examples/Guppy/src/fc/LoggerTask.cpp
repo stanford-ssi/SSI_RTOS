@@ -56,13 +56,13 @@ void LoggerTask::log(JsonDocument &jsonDoc, uint32_t tid)
 void LoggerTask::format()
 {
     FRESULT res = FR_OK;
-    printf("-I- Format disk %d\n\r", 0);
-    printf("-I- Please wait a moment during formatting...\n\r");
+    // printf("-I- Format disk %d\n\r", 0);
+    // printf("-I- Please wait a moment during formatting...\n\r");
     //res = f_mkfs("0", FM_EXFAT, 512);
-    printf("-I- Disk format finished !\n\r");
+    // printf("-I- Disk format finished !\n\r");
     if (res != FR_OK)
     {
-        printf("-E- f_mkfs pb: 0x%X\n\r", res);
+        // printf("-E- f_mkfs pb: 0x%X\n\r", res);
     }
 }
 
@@ -213,7 +213,7 @@ void LoggerTask::readSHITL(uint32_t taskid)
 
             if (tick.isNull() || id.isNull())
             {
-                printf("frame was invalid\n");
+                // printf("frame was invalid\n");
             }
             else
             {
@@ -223,7 +223,7 @@ void LoggerTask::readSHITL(uint32_t taskid)
                     JsonVariant bmp_p = sensor_json["bmp"]["p"];
                     if (adxl_a_2.isNull() || bmp_p.isNull())
                     {
-                        printf("sensor frame had invalid data\n");
+                        // printf("sensor frame had invalid data\n");
                     }
                     else
                     {
@@ -239,7 +239,7 @@ void LoggerTask::readSHITL(uint32_t taskid)
         }
         else
         {
-            printf("Parsing Error!\n");
+            // printf("Parsing Error!\n");
         }
     }
     digitalWrite(SENSOR_LED, false);
